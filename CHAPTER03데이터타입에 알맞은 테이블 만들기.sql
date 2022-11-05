@@ -328,3 +328,142 @@ VALUES(0002, '홍길동', 1000000, 0);
 
 
 --ALTER table
+CREATE TABLE book_info(
+	id   INTEGER NOT NULL PRIMARY KEY,
+	name Varchar(20)  NOT NULL
+);
+
+INSERT INTO book_info VALUES(1, 'POSTGRESQL'),(2, 'MONGODB');
+
+--여기서 중요한 점은 새로운 컬럼을 추가하면 기존에 있던 열들은 모두 NULL값을 갖는다는 것이다,
+--따라서 만약 ADD COLUMN 뒤 제약조건 NOT NULL 제약조건을 추가하게 되면 오류가 발생한다.
+ALTER TABLE book_info
+ADD COLUMN published_date DATE;
+
+UPDATE book_info
+SET published_date = '2020.12.25'
+WHERE id = 1;
+
+UPDATE book_info
+SET published_date = '2020.12.27'
+WHERE id = 2;
+
+SELECT * FROM book_info;
+
+ALTER TABLE book_info
+ALTER COLUMN published_date SET NOT NULL;
+
+--여기서 중요한 점은 다른 컬럼이 지우려고 하는 컬럼을 참조하면 안된다는 것이다. 외래 키 제약조건에
+--의해 published_date를 참조하는 컬럼이 있다면 지울 수 없다. 
+ALTER TABLE book_info
+DROP COLUMN published_date;
+--물론 CASCADE 속성을 활용하면 이러한 문제를 해결할 수 있다.
+ALTER TABLE book_info
+DROP COLUMN published_date CASCADE;
+
+DROP TABLE IF EXISTS book_info;
+
+CREATE TABLE book_info(
+	book_id   INTEGER NOT NULL PRIMARY KEY,
+	book_name VARCHAR(20) NOT NULL UNIQUE
+);
+
+INSERT INTO book_info VALUES(1, 'POSTGRESQL'),(2, 'MONGODB');
+
+CREATE TABLE library(
+	id        INTEGER NOT NULL PRIMARY KEY,
+	name      VARCHAR(40) NOT NULL,
+	book_name VARCHAR(20) NOT NULL REFERENCES book_info(book_name)
+);
+
+INSERT INTO library VALUES(1, '국립도서관', 'POSTGRESQL');
+
+SELECT * FROM book_info;
+
+ALTER TABLE book_info DROP COLUMN book_name CASCADE;
+
+SELECT * FROM book_info;
+
+--RENAME COLUMN 속성
+DROP TABLE book_info;
+DROP TABLE library;
+
+CREATE TABLE book_info(
+	book_id   INTEGER NOT NULL PRIMARY KEY,
+	book_name VARCHAR(20) NOT NULL UNIQUE
+);
+
+INSERT INTO book_info VALUES(1,'POSTGRESQL'),(2,'MONGODB');
+
+CREATE TABLE library(
+	id   INTEGER     NOT NULL PRIMARY KEY,
+	name VARCHAR(40) NOT NULL,
+	book_name VARCHAR(20) NOT NULL REFERENCES book_info(book_name)
+);
+
+INSERT INTO library VALUES(1, '국립도서관', 'POSTGRESQL');
+ALTER TABLE book_info RENAME book_name TO name;
+
+--이름이 바뀌는 컬럼을 참조하는 다른 컬럼이나 객체가 있으면 PostgreSQL에서는 자동으로 이름이 변경된다.
+SELECT * FROM book_info;
+SELECT * FROM library;
+
+--ALTER TABLE 테이블 이름 ALTER COLUMN 컬럼이름 SET NOT NULL;   //NOT NULL 제약조건 추가
+--ALTER TABLE 테이블 이름 ALTER COLUMN 컬럼이름 DROP NOT NULL;  //NOT NULL 제약조건 제거
+DROP TABLE IF EXISTS library;
+DROP TABLE IF EXISTS book_info;
+
+CREATE TABLE book_info(
+	id   INTEGER NOT NULL PRIMARY KEY,
+	name VARCHAR(20) NOT NULL
+);
+
+INSERT INTO book_info VALUES(1, 'POSTGRESQL'),(2,'MOMGODB');
+
+ALTER TABLE book_info
+ALTER COLUMN name DROP NOT NULL;
+
+--ADD PRIMARY KEY  / ADD FOREIGN KEY (컬럼이름1) REFERENCES 부모테이블 (컬럼이름2);
+DROP TABLE IF EXISTS book;
+
+CREATE TABLE book(
+	id   INTEGER     NOT NULL,
+	name VARCHAR(20) NOT NULL
+);
+
+ALTER TABLE book
+ADD PRIMARY KEY(id);
+
+CREATE TABLE library(
+	lib_id   INTEGER     NOT NULL PRIMARY KEY,
+	lib_name VARCHAR(30) NOT NULL,
+	book_id  INTEGER NOT NULL
+);
+
+ALTER TABLE library
+ADD FOREIGN KEY (book_id) REFERENCES book (id);
+
+--만들어진 테이블에 데이터 타입 변경하기
+CREATE TABLE water(
+	id SMALLINT NOT NULL PRIMARY KEY,
+	name TEXT NOT NULL,
+	location_no VARCHAR NOT NULL,
+	descreiption TEXT
+);
+
+INSERT INTO water VALUES(01, '천지', '02', '백두산 천지');
+
+ALTER TABLE water RENAME descreiption TO description;
+
+ALTER TABLE water
+ALTER COLUMN id TYPE INTEGER,
+ALTER COLUMN description TYPE VARCHAR;
+--에러. 컬럼 속에 해당하는 데이터값과 바꿀 수 있는 컬럼의 데이터 타입이 서로 다르기 때문이다.
+ALTER TABLE water
+ALTER COLUMN location_no SET DATA TYPE INTEGER; 
+--문제해결) USING 절을 이용. 데이터 값을 형변환하는 동시에 컬럼의 데이터 타입도 바꿀 수 있게 해준다
+--USING 컬럼이름::새로운 데이터 타입
+ALTER TABLE water
+ALTER COLUMN location_no TYPE INTEGER USING location_no::INTEGER;
+
+SELECT * FROM water;
