@@ -107,3 +107,224 @@ CREATE TABLE contact_info(
 	Email   VARCHAR
 );
 
+--2) UNIQUE (이 제약조건에 해당하는 컬럼 값을 테이블 내에서 유일한 값을 가져야 한다.)
+DROP TABLE IF EXISTS contact_info;
+CREATE TABLE contact_info(
+	cont_id NUMERIC(3) UNIQUE NOT NULL,
+	name    VARCHAR(15) NOT NULL,
+	tel     INTEGER[]   NOT NULL,
+	email   VARCHAR
+);
+
+DROP TABLE IF EXISTS contact_info;
+--UNIQUE 제약조건이 여러개인 경우 다음과 같이 새로운 줄에 적는 형식으로 선언할 수 있다
+CREATE TABLE contact_info(
+	cont_id NUMERIC(3)  NOT NULL,
+	name    VARCHAR(15) NOT NULL,
+	tel     INTEGER[]   NOT NULL,
+	email   VARCHAR,
+	UNIQUE (cont_id, tel, email)
+);
+
+--3) 프라이머리 키(UNIQUE해야하며 NOT NULL해야한다.)
+DROP TABLE IF EXISTS contact_info;
+CREATE TABLE contact_info(
+	cont_id SERIAL    NOT NULL PRIMARY KEY,
+	name    VARCHAR   NOT NULL,
+	tel     INTEGER[] NOT NULL,
+    email   VARCHAR
+);
+--프라이머리 키는 일반적으로 한 테이블에 하나지만, 이후에 나올 외래키 제약 조건으로 인해 프라이머리 키가
+--여러개일 경우, UNIQUE 제약조건과 유사하게 다음과 같은 형태로 여러 개의 프라이머리 키를 선언할 수 있다
+CREATE TABLE book(
+	book_id   SERIAL      NOT NULL,
+	name      VARCHAR(15) NOT NULL,
+	admin_no  SERIAL      NOT NULL REFERENCES contact_info(cont_id),
+	email     VARCHAR,
+	PRIMARY KEY(book_id, admin_no)
+);
+
+--4) 외래 키
+--외래 키 제약조건은 다음과 같은 네가지 규칙을 가진다.
+--a. 부모 테이블이 자식 테이블보다 먼저 생성되어야 한다.
+--b. 부모 테이블은 자식 테이블과 같은 데이터 타입을 가져야 한다.
+--c. 부모 테이블에서 참조 된 컬럼의 값만 자식 테이블에서 입력 가능하다.
+--d. 참조되는 컬럼은 모두 프라이머리 키이거나 UNIQUE 제약조건 형식이어야 한다.
+
+--부모 테이블
+CREATE TABLE subject(
+	subj_id   NUMERIC(5)  NOT NULL PRIMARY KEY,
+	subk_name VARCHAR(60) NOT NULL
+);
+
+INSERT INTO subject
+VALUES(00001, 'mathematics'),
+      (00002, 'science'),
+	  (00003, 'programming');
+	  
+--자식 테이블 (*NUMERIC)
+CREATE TABLE teacher(
+	teac_id            NUMERIC(5)  NOT NULL PRIMARY KEY,
+	teac_name          VARCHAR(20) NOT NULL,
+	subj_id            NUMERIC(5)  REFERENCES subject,
+	teac_certifi_date  DATE
+);
+
+INSERT INTO teacher values (00011, '정선생', 00001, '2017-03-11');
+INSERT INTO teacher values (00021, '홍선생', 00002, '2017-04-12');
+INSERT INTO teacher values (00031, '박선생', 00003, '2017-04-13');
+--실패
+INSERT INTO teacher values (00099, '소선생', 00004, '2022-11-05');
+
+--만약 외래키가 여러개라면 아래와 같은 방법으로 외래키를 설정할 수 있다
+DROP TABLE IF EXISTS teacher;
+DROP TABLE IF EXISTS subject;
+CREATE TABLE subject(
+	subj_id    NUMERIC(5)  NOT NULL PRIMARY KEY,
+	subj_name  VARCHAR(60) NOT NULL,
+	stud_count NUMERIC(20) NOT NULL,
+	UNIQUE(subj_id, subj_name)
+);
+
+INSERT INTO subject
+VALUES (00001, 'mathmatics', 60),
+       (00002, 'science', 42),
+	   (00003, 'programming', 70);
+	   
+CREATE TABLE teacher(
+	teac_id    NUMERIC(5)  NOT NULL PRIMARY KEY,
+	teac_name  VARCHAR(20) NOT NULL,
+	subj_code  NUMERIC(5)  NOT NULL,
+	subj_name  VARCHAR(60) NOT NULL,
+	teac_certifi_date DATE NOT NULL,
+	FOREIGN KEY(subj_code, subj_name) REFERENCES subject (subj_id, subj_name)
+);
+
+--기본적으로 부모 테이블은 자식테이블보다 먼저 삭제 또는 수정할 수 없다. 
+--부모테이블 지울 때 자식테이블도 같이 삭제하려면 ON DELETE CASCADE조건을 추가하자. 
+-- <-> ON DELETE RESTRICT
+DROP TABLE IF EXISTS teacher;
+DROP TABLE IF EXISTS subject;
+
+CREATE TABLE subject(
+	subj_id   NUMERIC(5)  NOT NULL PRIMARY KEY,
+	subj_name VARCHAR(60) NOT NULL
+);
+
+INSERT INTO subject
+VALUES (00001, 'mathematics'),
+       (00002, 'science'),
+	   (00003, 'progamming');
+	   
+CREATE TABLE teacher(
+	teac_id   NUMERIC(5)  NOT NULL PRIMARY KEY,
+	teac_name VARCHAR(20) NOT NULL,
+	subj_id   NUMERIC(5)  REFERENCES subject ON DELETE CASCADE,
+	teac_certifi_date DATE 
+);
+
+INSERT INTO teacher
+VALUES (00011, '정선생', 00001, '2017-03-11'),
+       (00021, '홍선생', 00002, '2017-04-12'),
+	   (00031, '박선생', 00003, '2017-04-13');
+	   
+SELECT * FROM teacher;
+
+DELETE FROM subject WHERE subj_id = 00002;
+SELECT * FROM teacher;
+
+--ON DELETE SET NULL : 부모테이블에서 참조된 행이 삭제될 때 자식 테이블의 참조 행에서 해당 컬럼의 값을
+--자동으로 NULL로 세팅한다.
+DROP TABLE IF EXISTS teacher;
+DROP TABLE IF EXISTS subject;
+
+CREATE TABLE subject(
+	subj_id   NUMERIC(5)  NOT NULL PRIMARY KEY,
+	subj_name VARCHAR(60) NOT NULL
+);
+
+INSERT INTO subject
+VALUES (00001, 'mathematics'),
+       (00002, 'science'),
+	   (00003, 'progamming');
+	   
+CREATE TABLE teacher(
+	teac_id   NUMERIC(5)  NOT NULL PRIMARY KEY,
+	teac_name VARCHAR(20) NOT NULL,
+	subj_id   NUMERIC(5)  REFERENCES subject ON DELETE SET NULL,
+	teac_certifi_date DATE 
+);
+
+INSERT INTO teacher
+VALUES (00011, '정선생', 00001, '2017-03-11'),
+       (00021, '홍선생', 00002, '2017-04-12'),
+	   (00031, '박선생', 00003, '2017-04-13');
+	   
+SELECT * FROM teacher;
+
+DELETE FROM subject WHERE subj_id = 00002;
+SELECT * FROM teacher;
+
+--ON DELETE SET DEFAULT : 부모테이블에서 참조된 행이 삭제될 때 자식 테이블의 컬럼값이 DEFAULT값으로
+--대체된다. (자식 테이블 CREATE할 때 설정된 DEFAULT값으로. 주의해야할 점은 디폴트로 설정된 값도
+--외래 키 제약조건을 만족해야 한다는 것이다.)
+DROP TABLE IF EXISTS teacher;
+DROP TABLE IF EXISTS subject;
+
+CREATE TABLE subject(
+	subj_id   NUMERIC(5)  NOT NULL PRIMARY KEY,
+	subj_name VARCHAR(60) NOT NULL
+);
+
+INSERT INTO subject
+VALUES (00001, 'mathematics'),
+       (00002, 'science'),
+	   (00003, 'progamming');
+	   
+CREATE TABLE teacher(
+	teac_id   NUMERIC(5)  NOT NULL PRIMARY KEY,
+	teac_name VARCHAR(20) NOT NULL,
+	subj_id   NUMERIC(5)  DEFAULT 1 REFERENCES subject ON DELETE SET DEFAULT,
+	teac_certifi_date DATE 
+);
+
+INSERT INTO teacher
+VALUES (00011, '정선생', 00001, '2017-03-11'),
+       (00021, '홍선생', 00002, '2017-04-12'),
+	   (00031, '박선생', 00003, '2017-04-13');
+	   
+SELECT * FROM teacher;
+
+DELETE FROM subject WHERE subj_id = 00002;
+SELECT * FROM teacher;
+
+--CHECK (이 제약조건을 두고 도메인 데이터 타입을 쓰는 이유는 CHECK 제약 조건 속으로 들어가는
+--쿼리문이 길어지면 가독성을 해칠 수 있기에 이때 도메인 데이터 타입을 함수처럼 따로 떼어내어 사용한다면
+--더 효율적으로 코드 분석이 가능하기 때문이다.)
+CREATE TABLE order_info(
+	order_no  INTEGER NOT NULL PRIMARY KEY,
+	cust_name VARCHAR(100),
+    price     MONEY,
+	order_qty INTEGER CHECK(order_qty > 0)
+);
+
+DROP TABLE order_info;
+CREATE DOMAIN qtyint AS integer CHECK(VALUE > 0);
+CREATE TABLE order_info(
+	order_no  INTEGER NOT NULL PRIMARY KEY,
+	cust_name VARCHAR(100),
+    price     MONEY,
+	order_qty qtyint
+);
+
+INSERT INTO order_info 
+VALUES(0001, '홍길동', 1000000, 1);
+
+SELECT * FROM order_info;
+
+--실패
+INSERT INTO order_info 
+VALUES(0002, '홍길동', 1000000, 0);
+
+
+--ALTER table
