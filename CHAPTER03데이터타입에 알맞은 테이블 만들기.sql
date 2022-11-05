@@ -66,3 +66,44 @@ VALUES(001, '{"customer":"Jaejin","books":{"product":"맛있는","qty":2}}'),
 	  (003, '{"customer":"Sojung","books":{"product":"쉬운sql","qty":1}}')
 
 SELECT * FROM develop_book_order;
+
+--CAST형 연산자
+
+CREATE TABLE contact(
+	id    INTEGER,
+	name  VARCHAR,
+	phone NUMERIC(11)
+);
+
+INSERT INTO contact VALUES(11, '홍길동', 01011111111);
+
+SELECT name, phone FROM contact;
+SELECT name, CAST (phone AS VARCHAR) FROM contact;
+
+--범위 무결성(Domain integrity)
+--무결성이란, 데이터베이스 내에 정확하고 유효한 데이터만을 유지시키는 속성이다. 즉 불필요한 데이터는 최대한
+--제거하고 합칠 수 있는 데이터는 최대한 합치자는 것이다.
+CREATE DOMAIN phoneint AS integer CHECK(VALUE > 0 AND VALUE < 9);
+
+CREATE TABLE domain_type_study(
+	id phoneint
+);
+
+INSERT INTO domain_type_study VALUES(1);
+INSERT INTO domain_type_study VALUES(5);
+--실패
+INSERT INTO domain_type_study VALUES(10);
+INSERT INTO domain_type_study VALUES(-1);
+
+
+--컬럼값 제한하기 for 무결성 유지하기
+
+--1) NOT NULL
+DROP TABLE IF EXISTS contact_info;
+CREATE TABLE contact_info(
+	cont_id NUMERIC(3)  NOT NULL,
+	name    VARCHAR(15) NOT NULL,
+	tel     INTEGER[]   NOT NULL,
+	Email   VARCHAR
+);
+
