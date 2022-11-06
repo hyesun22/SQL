@@ -64,5 +64,7 @@ SELECT '{"p": {"1":"postgres"},"s": {"1":"sql"}}'::json -> 'p' AS result;
 
 --JSON 배열의 경우, 인덱스 번호를 활용하여 불러올 수 있다. 이때 인덱스 번호는 0부터 시작하니 주의~!
 SELECT '[{"p": "postgres"},{"s": "sql"},{"m": "mongoDB"}]'::json -> 2 AS result;
---만약 인덱스 번호가 음수라면 뒤에서 부터 시작한다. 왼쪽에서 +2  아래에선 {"s": "sql"}이 도출됨.
-SELECT '[{"p": "postgres"},{"s": "sql"},{"m": "mongoDB"}]'::json -> -2 AS result;
+--만약 인덱스 번호가 음수라면 아래의 경우 인덱스 0이 인덱스-3이 된다.  {"s": "sql"}이 도출됨.
+SELECT '[{"p": "postgres"},{"s": "sql"},{"m": "mongoDB"}]'::json -> -3 AS result;
+--JSON오브젝트, JSON 배열 모두 TEXT로 불러오려면 ->> 연산자를 사용하면 된다.
+SELECT '{"p": {"1":"postgres"},"s": {"1":"sql"}}'::json ->> 'p' AS result; 
