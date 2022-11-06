@@ -73,5 +73,9 @@ SELECT '{"p": {"1":"postgres"},"s": {"1":"sql"}}'::json ->> 'p' AS result;
 --특정한 경로를 지정해 데이터 값을 불러올 수 있다.
 SELECT '{"i":{"read":{"book":"postgresql"}}}'::json #> '{"i","read","book"}' AS result;
 --JSON배열이 중간에 끼어 있다면, 키 값 대신 인덱스 번호를 넣어주면 된다.
+--여기서도 TEXT타입으로 값을 가져오고 싶으면 #>> 연산자를 사용하면 된다.
 SELECT '{"post":[{"gre": {"sql":"do it"}},{"t":"sql"}]}'::json #>'{"post",0,"gre","sql"}'
 AS result;
+
+--*아쉽게도 JSONB가 아닌 JSON데이터 타입에서는 기본적인 연산자 <,>,<=,>=,=,<>는  사용할 수 없다*
+--추가적인 JSONB 연산자
