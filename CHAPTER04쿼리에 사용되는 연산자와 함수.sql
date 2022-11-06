@@ -68,3 +68,10 @@ SELECT '[{"p": "postgres"},{"s": "sql"},{"m": "mongoDB"}]'::json -> 2 AS result;
 SELECT '[{"p": "postgres"},{"s": "sql"},{"m": "mongoDB"}]'::json -> -3 AS result;
 --JSON오브젝트, JSON 배열 모두 TEXT로 불러오려면 ->> 연산자를 사용하면 된다.
 SELECT '{"p": {"1":"postgres"},"s": {"1":"sql"}}'::json ->> 'p' AS result; 
+
+--JSON이 만약 복잡한 다층의 구조로 이루어져 있을 때는 값을 불러올 때 #> 연산자를 쓴다... 이 연산자는
+--특정한 경로를 지정해 데이터 값을 불러올 수 있다.
+SELECT '{"i":{"read":{"book":"postgresql"}}}'::json #> '{"i","read","book"}' AS result;
+--JSON배열이 중간에 끼어 있다면, 키 값 대신 인덱스 번호를 넣어주면 된다.
+SELECT '{"post":[{"gre": {"sql":"do it"}},{"t":"sql"}]}'::json #>'{"post",0,"gre","sql"}'
+AS result;
